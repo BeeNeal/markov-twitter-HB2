@@ -87,12 +87,25 @@ def make_text(chains, n):
             words.append(rand_value)
             i += 1
 
-    for i in range(len(current_string) - 1, 0, -1):
-        if current_string[i] in ".?":
-            chopped_string = current_string[:i + 1]
-            break
+    return current_string
 
-    return chopped_string
+def chops_string(current_string):
+    """chops string at punctuation and has 140 char limit"""
+
+    if len(current_string) > 140:
+        chopped_string = current_string[:140]
+    else:
+        chopped_string = current_string
+
+    for i in range(len(chopped_string) - 1, 0, -1):
+        if chopped_string[i] in ".?":
+            new_chopped_string = chopped_string[:i + 1]
+            break
+    else:
+        new_chopped_string = chopped_string
+
+    return new_chopped_string
+
 
 def tweet(chopped_string):
     """Takes markov chain of less than 140 characters and tweets it"""
@@ -106,20 +119,31 @@ api = twitter.Api(
     consumer_secret=os.environ["TWITTER_CONSUMER_SECRET"],
     access_token_key=os.environ["TWITTER_ACCESS_TOKEN_KEY"],
     access_token_secret=os.environ["TWITTER_ACCESS_TOKEN_SECRET"])
-print api.VerifyCredentials()
+# print api.VerifyCredentials()
 
 
 input_path1 = sys.argv[1]
 input_path2 = sys.argv[2]
 
 
-# Open the file and turn it into one long string
-combined_text = open_and_read_file(input_path1) + open_and_read_file(input_path2)
 
-# Get a Markov chain
-chains, number_ngram = make_chains(combined_text)
 
-# Produce random text
-random_text = make_text(chains, number_ngram)
+while True:
+    # Open the file and turn it into one long string
+    combined_text = open_and_read_file(input_path1) + open_and_read_file(input_path2)
 
-tweet(random_text)
+    # Get a Markov chain
+    chains, number_ngram = make_chains(combined_text)
+
+    # Produce random text
+    random_text = make_text(chains, number_ngram)
+
+    chopped_text = chops_string(random_text)
+
+    tweet(chopped_text)
+
+    user_input = raw_input("Press enter to tweet again? >")
+    if user_input == "q":
+        break
+    else:
+        continue
